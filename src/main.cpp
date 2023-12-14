@@ -1,128 +1,102 @@
-#include <ezButton.h>
-
 #include <Wire.h>
-#include <SPI.h>
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
-
 #include <LiquidCrystal_I2C.h>
 
-#define VRX_PIN 36 // ESP32 pin GPIO36 (ADC0) connected to VRX pin
-#define VRY_PIN 39 // ESP32 pin GPIO39 (ADC0) connected to VRY pin
-#define SW_PIN 17  // ESP32 pin GPIO17 connected to SW  pin
+// Function prototypes
+void displayReadings();
+void handleJoystick();
 
-ezButton button(SW_PIN);
-Adafruit_BME680 bme; // I2C
+// Define BME680 sensor
+Adafruit_BME680 bme;
 
-#define SEALEVELPRESSURE_HPA (1013.25)
-
-int valueX = 0; // to store the X-axis value
-int valueY = 0; // to store the Y-axis value
-int bValue = 0; // To store value of the button
+// Define LCD
+LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 void setup()
 {
   Serial.begin(115200);
-  button.setDebounceTime(50); // set debounce time to 50 milliseconds
-
   while (!Serial)
     ;
-  Serial.println(F("BME680 async test"));
+  // set pin 39 to input mode
+  pinMode(39, INPUT);
 
+  // Initialize BME680 sensor
   if (!bme.begin())
   {
-    Serial.println(F("Could not find a valid BME680 sensor, check wiring!"));
+    Serial.println("Could not find a valid BME680 sensor, check wiring!");
     while (1)
       ;
   }
 
-  // Set up oversampling and filter initialization
-  bme.setTemperatureOversampling(BME680_OS_8X);
-  bme.setHumidityOversampling(BME680_OS_2X);
-  bme.setPressureOversampling(BME680_OS_4X);
-  bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
-  bme.setGasHeater(320, 150); // 320*C for 150 ms
+  // Initialize LCD
+  lcd.init();
+  lcd.backlight();
+}
+
+int16_t temperature = 0;
+int16_t humidity = 0;
+int16_t pressure = 0;
+int16_t gasResistance = 0;
+
+unsigned long lastSensorReadingTime = 0;
+const unsigned long sensorReadingInterval = 2000; // 2 seconds
+
+void sensorReadings()
+{
+  if (millis() - lastSensorReadingTime >= sensorReadingInterval)
+  {
+    temperature = bme.readTemperature();
+    humidity = bme.readHumidity();
+    pressure = bme.readPressure() / 100;
+    gasResistance = bme.readGas();
+    lastSensorReadingTime = millis();
+  }
 }
 
 void loop()
 {
-  button.loop(); // MUST call the loop() function first
+  // Display sensor readings
+  displayReadings();
+  sensorReadings();
+  // Read joystick input and navigate menu
+  handleJoystick();
+}
 
-  // read X and Y analog values
-  valueX = analogRead(VRX_PIN);
-  valueY = analogRead(VRY_PIN);
+void displayReadings()
+{
 
-  // Read the button value
-  bValue = button.getState();
+  lcd.setCursor(0, 0);
+  lcd.print("Temperature: ");
+  lcd.print(temperature);
 
-  if (button.isPressed())
+  lcd.setCursor(0, 1);
+  lcd.print("Humidity: ");
+  lcd.print(humidity);
+
+  lcd.setCursor(0, 2);
+  lcd.print("Pressure: ");
+  lcd.print(pressure);
+
+  lcd.setCursor(0, 3);
+  lcd.print("API: ");
+  lcd.print(gasResistance);
+}
+
+void handleJoystick()
+{
+  int joystickValue = analogRead(39); // Replace 39 with the actual pin number you are using
+  Serial.println(joystickValue);
+
+  // Adjust the threshold based on your joystick characteristics
+  if (joystickValue < 800)
   {
-    Serial.println("The button is pressed");
-    // TODO do something here
+    // Scroll down
+    // Implement scrolling logic if you have more than 4 lines of data
   }
-
-  if (button.isReleased())
+  else if (joystickValue > 3000)
   {
-    Serial.println("The button is released");
-    // TODO do something here
+    // Scroll up
+    // Implement scrolling logic if you have more than 4 lines of data
   }
-
-  // print data to Serial Monitor on Arduino IDE
-  // Serial.print("x = ");
-  // Serial.print(valueX);
-  // Serial.print(", y = ");
-  // Serial.print(valueY);
-  // Serial.print(" : button = ");
-  // Serial.println(bValue);
-
-  // Tell BME680 to begin measurement.
-  unsigned long endTime = bme.beginReading();
-  if (endTime == 0)
-  {
-    Serial.println(F("Failed to begin reading :("));
-    return;
-  }
-  Serial.print(F("Reading started at "));
-  Serial.print(millis());
-  Serial.print(F(" and will finish at "));
-  Serial.println(endTime);
-
-  Serial.println(F("You can do other work during BME680 measurement."));
-  delay(2000); // This represents parallel work.
-  // There's no need to delay() until millis() >= endTime: bme.endReading()
-  // takes care of that. It's okay for parallel work to take longer than
-  // BME680's measurement time.
-
-  // Obtain measurement results from BME680. Note that this operation isn't
-  // instantaneous even if milli() >= endTime due to I2C/SPI latency.
-  if (!bme.endReading())
-  {
-    Serial.println(F("Failed to complete reading :("));
-    return;
-  }
-  Serial.print(F("Reading completed at "));
-  Serial.println(millis());
-
-  Serial.print(F("Temperature = "));
-  Serial.print(bme.temperature);
-  Serial.println(F(" *C"));
-
-  Serial.print(F("Pressure = "));
-  Serial.print(bme.pressure / 100.0);
-  Serial.println(F(" hPa"));
-
-  Serial.print(F("Humidity = "));
-  Serial.print(bme.humidity);
-  Serial.println(F(" %"));
-
-  Serial.print(F("Gas = "));
-  Serial.print(bme.gas_resistance / 1000.0);
-  Serial.println(F(" KOhms"));
-
-  Serial.print(F("Approx. Altitude = "));
-  Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
-  Serial.println(F(" m"));
-
-  Serial.println();
-  delay(2000);
 }
