@@ -1,17 +1,43 @@
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
-#include <LiquidCrystal_I2C.h>
 
-// Function prototypes
-void displayReadings();
-void handleJoystick();
+#include <ItemSubMenu.h>
+#include <LcdMenu.h>
+
+#define LCD_ROWS 4
+#define LCD_COLS 20
+
+// Configure keyboard keys (ASCII)
+#define UP 56       // NUMPAD 8
+#define DOWN 50     // NUMPAD 2
+#define LEFT 52     // NUMPAD 4
+#define RIGHT 54    // NUMPAD 6
+#define ENTER 53    // NUMPAD 5
+#define BACK 55     // NUMPAD 7
+#define BACKSPACE 8 // BACKSPACE
+#define CLEAR 46    // NUMPAD .
+
+extern MenuItem *settingsMenu[];
+
+// Define the main menu
+MAIN_MENU(
+    ITEM_BASIC("Start service"),
+    ITEM_BASIC("Connect to WiFi"),
+    ITEM_SUBMENU("Settings", settingsMenu),
+    ITEM_BASIC("Blink SOS"),
+    ITEM_BASIC("Blink random"));
+/**
+ * Create submenu and precise its parent
+ */
+SUB_MENU(settingsMenu, mainMenu,
+         ITEM_BASIC("Backlight"),
+         ITEM_BASIC("Contrast"));
+
+LcdMenu menu(LCD_ROWS, LCD_COLS);
 
 // Define BME680 sensor
 Adafruit_BME680 bme;
-
-// Define LCD
-LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 void setup()
 {
@@ -29,9 +55,7 @@ void setup()
       ;
   }
 
-  // Initialize LCD
-  lcd.init();
-  lcd.backlight();
+  menu.setupLcdWithMenu(0x27, mainMenu);
 }
 
 float temperature = 0;
@@ -56,47 +80,20 @@ void sensorReadings()
 
 void loop()
 {
-  // Display sensor readings
-  displayReadings();
-  sensorReadings();
-  // Read joystick input and navigate menu
-  handleJoystick();
-}
+  if (!Serial.available())
+    return;
+  char command = Serial.read();
 
-void displayReadings()
-{
-
-  lcd.setCursor(0, 0);
-  lcd.print("Temperature: ");
-  lcd.print(temperature);
-
-  lcd.setCursor(0, 1);
-  lcd.print("Humidity: ");
-  lcd.print(humidity);
-
-  lcd.setCursor(0, 2);
-  lcd.print("Pressure: ");
-  lcd.print(pressure);
-
-  lcd.setCursor(0, 3);
-  lcd.print("API: ");
-  lcd.print(gasResistance);
-}
-
-void handleJoystick()
-{
-  int joystickValue = analogRead(39); // Replace 39 with the actual pin number you are using
-  Serial.println(joystickValue);
-
-  // Adjust the threshold based on your joystick characteristics
-  if (joystickValue < 800)
-  {
-    // Scroll down
-    // Implement scrolling logic if you have more than 4 lines of data
-  }
-  else if (joystickValue > 3000)
-  {
-    // Scroll up
-    // Implement scrolling logic if you have more than 4 lines of data
-  }
+  if (command == UP)
+    menu.up();
+  else if (command == DOWN)
+    menu.down();
+  else if (command == LEFT)
+    menu.left();
+  else if (command == RIGHT)
+    menu.right();
+  else if (command == ENTER)
+    menu.enter();
+  else if (command == BACK)
+    menu.back();
 }
