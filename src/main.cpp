@@ -34,10 +34,10 @@ void setup()
   lcd.backlight();
 }
 
-int16_t temperature = 0;
-int16_t humidity = 0;
-int16_t pressure = 0;
-int16_t gasResistance = 0;
+float temperature = 0;
+float humidity = 0;
+float pressure = 0;
+float gasResistance = 0;
 
 unsigned long lastSensorReadingTime = 0;
 const unsigned long sensorReadingInterval = 2000; // 2 seconds
