@@ -21,6 +21,7 @@ float temperature = 0;
 float humidity = 0;
 float pressure = 0;
 float gasResistance = 0;
+// temperature, humidity, pressure, gasResistance are global variables and string to passed to item basic
 
 extern MenuItem *settingsMenu[];
 extern MenuItem *sensorReadingsMenu[];
@@ -38,10 +39,10 @@ SUB_MENU(settingsMenu, mainMenu,
          ITEM_BASIC("Backlight"),
          ITEM_BASIC("Contrast"));
 SUB_MENU(sensorReadingsMenu, mainMenu,
-         ITEM_BASIC("Temperature"),
-         ITEM_BASIC("Humidity"),
-         ITEM_BASIC("Pressure"),
-         ITEM_BASIC("Gas resistance"));
+         ITEM_BASIC("Temperature: ", temperature),
+         ITEM_BASIC("Humidity: ", humidity),
+         ITEM_BASIC("Pressure: ", pressure),
+         ITEM_BASIC("Gas Resistance: ", gasResistance));
 
 LcdMenu menu(LCD_ROWS, LCD_COLS);
 
@@ -78,21 +79,20 @@ void setup()
   menu.setupLcdWithMenu(0x27, mainMenu);
 }
 
-void sensorReadings()
+// Update sensor readings in the loop
+void updateSensorReadings()
 {
-  if (millis() - lastSensorReadingTime >= sensorReadingInterval)
-  {
-    temperature = bme.readTemperature();
-    humidity = bme.readHumidity();
-    pressure = bme.readPressure() / 100;
-    gasResistance = bme.readGas();
-    lastSensorReadingTime = millis();
-  }
+  // Update your sensor readings here
+  // For example:
+  temperature = bme.readTemperature();
+  humidity = bme.readHumidity();
+  pressure = bme.readPressure() / 100;
+  gasResistance = bme.readGas();
 }
 
 void loop()
 {
-  sensorReadings();
+  updateSensorReadings();
 
   if (digitalRead(UP) == LOW)
     handleButtonPress(&LcdMenu::up);
