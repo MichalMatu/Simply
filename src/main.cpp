@@ -5,7 +5,7 @@
 // **************************************************************
 #define UP 4
 #define DOWN 15
-#define LEFT 4
+#define LEFT 14
 #define RIGHT 5
 #define ENTER 12
 #define BACK 13
@@ -16,6 +16,7 @@ float temperature = 0;
 float humidity = 0;
 float pressure = 0;
 float gasResistance = 0;
+
 int menuIndex = 0;
 // --------------------------------------------------------------
 unsigned long lastSensorReadingTime = 0;
