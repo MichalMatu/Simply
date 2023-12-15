@@ -110,7 +110,4 @@ void loop()
 {
   sensorReadings();
   buttonsListener();
-
-  lcd.setCursor(0, 1);
-  lcd.print(temperature);
 }
