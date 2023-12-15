@@ -76,11 +76,13 @@ void buttonsListener()
     if (digitalRead(UP) == LOW)
     {
       Serial.println("UP");
+      currentItem++;
       lastButtonPressTime = currentTime; // Update the last button press time
     }
     else if (digitalRead(DOWN) == LOW)
     {
       Serial.println("DOWN");
+      currentItem--;
       lastButtonPressTime = currentTime; // Update the last button press time
     }
     else if (digitalRead(LEFT) == LOW)
@@ -184,10 +186,24 @@ void displayMenu()
   display.updateGasResistance(gasResistance);
 }
 
+void displaySettings()
+{
+  lcd.setCursor(0, 0);
+  lcd.print("Settings");
+}
+
 void loop()
 {
   sensorReadings();
   buttonsListener();
+  // if currentItem change value from 0 to 1 clear screen just once after change
 
-  displayMenu();
+  if (currentItem == 0)
+  {
+    displayMenu();
+  }
+  else if (currentItem == 1)
+  {
+    displaySettings();
+  }
 }
