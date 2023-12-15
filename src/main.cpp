@@ -106,8 +106,88 @@ void buttonsListener()
   }
 }
 
+class Display
+{
+public:
+  Display() : lastTemperature(-1), lastHumidity(-1), lastPressure(-1), lastGasResistance(-1) {}
+
+  // Update temperature line
+  void updateTemperature(int newTemperature)
+  {
+    if (newTemperature != lastTemperature)
+    {
+      lcd.setCursor(0, 0);
+      lcd.print("Temp: ");
+      lcd.print(newTemperature);
+      lcd.print(" C");
+
+      lastTemperature = newTemperature;
+    }
+  }
+
+  // Update humidity line
+  void updateHumidity(int newHumidity)
+  {
+    if (newHumidity != lastHumidity)
+    {
+      lcd.setCursor(0, 1);
+      lcd.print("Hum: ");
+      lcd.print(newHumidity);
+      lcd.print(" %");
+
+      lastHumidity = newHumidity;
+    }
+  }
+
+  // Update pressure line
+  void updatePressure(int newPressure)
+  {
+    if (newPressure != lastPressure)
+    {
+      lcd.setCursor(0, 2);
+      lcd.print("Pre: ");
+      lcd.print(newPressure);
+      lcd.print(" hPa");
+
+      lastPressure = newPressure;
+    }
+  }
+
+  // Update gas resistance line
+  void updateGasResistance(int newGasResistance)
+  {
+    if (newGasResistance != lastGasResistance)
+    {
+      lcd.setCursor(0, 3);
+      lcd.print("Gas: ");
+      lcd.print(newGasResistance);
+      lcd.print(" KOhms");
+
+      lastGasResistance = newGasResistance;
+    }
+  }
+
+private:
+  int lastTemperature;
+  int lastHumidity;
+  int lastPressure;
+  int lastGasResistance;
+};
+
+Display display; // Create an instance of the Display class
+
+void displayMenu()
+{
+  display.updateTemperature(temperature);
+  display.updateHumidity(humidity);
+  display.updatePressure(pressure);
+  display.updateGasResistance(gasResistance);
+}
+
 void loop()
 {
   sensorReadings();
   buttonsListener();
+
+  displayMenu();
 }
