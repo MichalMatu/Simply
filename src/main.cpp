@@ -2,24 +2,50 @@
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
 #include <LiquidCrystal_I2C.h>
-
-// Function prototypes
-void displayReadings();
-void handleJoystick();
+// **************************************************************
+#define UP 4
+#define DOWN 15
+#define LEFT 4
+#define RIGHT 5
+#define ENTER 12
+#define BACK 13
+#define BACKSPACE 8
+#define CLEAR 46
+// **************************************************************
+float temperature = 0;
+float humidity = 0;
+float pressure = 0;
+float gasResistance = 0;
+int menuIndex = 0;
+// --------------------------------------------------------------
+unsigned long lastSensorReadingTime = 0;
+const unsigned long sensorReadingInterval = 2000; // 2 seconds
+// **************************************************************
 
 // Define BME680 sensor
 Adafruit_BME680 bme;
-
 // Define LCD
 LiquidCrystal_I2C lcd(0x27, 20, 4);
+
+// **************************************************************
+
+void buttons()
+{
+  pinMode(UP, INPUT_PULLUP);
+  pinMode(DOWN, INPUT_PULLUP);
+  pinMode(LEFT, INPUT_PULLUP);
+  pinMode(RIGHT, INPUT_PULLUP);
+  pinMode(ENTER, INPUT_PULLUP);
+  pinMode(BACK, INPUT_PULLUP);
+}
 
 void setup()
 {
   Serial.begin(115200);
   while (!Serial)
-    ;
-  // set pin 39 to input mode
-  pinMode(39, INPUT);
+    ; // wait for serial port to connect. Needed for native USB port only
+
+  buttons();
 
   // Initialize BME680 sensor
   if (!bme.begin())
@@ -34,13 +60,7 @@ void setup()
   lcd.backlight();
 }
 
-float temperature = 0;
-float humidity = 0;
-float pressure = 0;
-float gasResistance = 0;
-
-unsigned long lastSensorReadingTime = 0;
-const unsigned long sensorReadingInterval = 2000; // 2 seconds
+// **************************************************************
 
 void sensorReadings()
 {
@@ -54,49 +74,37 @@ void sensorReadings()
   }
 }
 
+// **************************************************************
+void buttonsLisener()
+{
+  if (digitalRead(UP) == LOW)
+  {
+    Serial.println("UP");
+  }
+  else if (digitalRead(DOWN) == LOW)
+  {
+    Serial.println("DOWN");
+  }
+  else if (digitalRead(LEFT) == LOW)
+  {
+    Serial.println("LEFT");
+  }
+  else if (digitalRead(RIGHT) == LOW)
+  {
+    Serial.println("RIGHT");
+  }
+  else if (digitalRead(ENTER) == LOW)
+  {
+    Serial.println("ENTER");
+  }
+  else if (digitalRead(BACK) == LOW)
+  {
+    Serial.println("BACK");
+  }
+}
+
 void loop()
 {
-  // Display sensor readings
-  displayReadings();
   sensorReadings();
-  // Read joystick input and navigate menu
-  handleJoystick();
-}
-
-void displayReadings()
-{
-
-  lcd.setCursor(0, 0);
-  lcd.print("Temperature: ");
-  lcd.print(temperature);
-
-  lcd.setCursor(0, 1);
-  lcd.print("Humidity: ");
-  lcd.print(humidity);
-
-  lcd.setCursor(0, 2);
-  lcd.print("Pressure: ");
-  lcd.print(pressure);
-
-  lcd.setCursor(0, 3);
-  lcd.print("API: ");
-  lcd.print(gasResistance);
-}
-
-void handleJoystick()
-{
-  int joystickValue = analogRead(39); // Replace 39 with the actual pin number you are using
-  Serial.println(joystickValue);
-
-  // Adjust the threshold based on your joystick characteristics
-  if (joystickValue < 800)
-  {
-    // Scroll down
-    // Implement scrolling logic if you have more than 4 lines of data
-  }
-  else if (joystickValue > 3000)
-  {
-    // Scroll up
-    // Implement scrolling logic if you have more than 4 lines of data
-  }
+  buttonsLisener();
 }
