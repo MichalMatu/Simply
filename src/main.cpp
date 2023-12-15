@@ -2,7 +2,6 @@
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
 #include <LiquidCrystal_I2C.h>
-// **************************************************************
 #define UP 4
 #define DOWN 15
 #define LEFT 14
@@ -16,30 +15,17 @@ float temperature = 0;
 float humidity = 0;
 float pressure = 0;
 float gasResistance = 0;
-
 int currentItem = 0;
-
-// Lista pozycji menu
-const char *menuItems[] = {
-    "Opcja 1",
-    "Opcja 2",
-    "Opcja 3",
-    "Opcja 4"};
-// --------------------------------------------------------------
 unsigned long lastSensorReadingTime = 0;
-const unsigned long sensorReadingInterval = 2000; // 2 seconds
-
+const unsigned long sensorReadingInterval = 2000; // 2 seconds delay
 unsigned long lastButtonPressTime = 0;
 const unsigned long buttonPressDelay = 200; // 1 second delay
 // **************************************************************
-
 // Define BME680 sensor
 Adafruit_BME680 bme;
 // Define LCD
 LiquidCrystal_I2C lcd(0x27, 20, 4);
-
 // **************************************************************
-
 void buttons()
 {
   pinMode(UP, INPUT_PULLUP);
@@ -49,9 +35,6 @@ void buttons()
   pinMode(ENTER, INPUT_PULLUP);
   pinMode(BACK, INPUT_PULLUP);
 }
-
-// **************************************************************
-
 void setup()
 {
   Serial.begin(115200);
@@ -72,9 +55,6 @@ void setup()
   lcd.init();
   lcd.backlight();
 }
-
-// **************************************************************
-
 void sensorReadings()
 {
   if (millis() - lastSensorReadingTime >= sensorReadingInterval)
@@ -86,8 +66,6 @@ void sensorReadings()
     lastSensorReadingTime = millis();
   }
 }
-
-// **************************************************************
 void buttonsListener()
 {
   unsigned long currentTime = millis();
@@ -144,6 +122,14 @@ void buttonsListener()
     }
   }
 }
+
+// Lista pozycji menu
+const char *menuItems[] = {
+    "Opcja 1",
+    "Opcja 2",
+    "Opcja 3",
+    "Opcja 4"};
+
 void loop()
 {
   sensorReadings();
