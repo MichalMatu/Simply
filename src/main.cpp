@@ -12,8 +12,8 @@
 #define DOWN 15
 #define LEFT 4
 #define RIGHT 5
-#define ENTER 53
-#define BACK 55
+#define ENTER 12
+#define BACK 13
 #define BACKSPACE 8
 #define CLEAR 46
 
@@ -53,6 +53,8 @@ void setup()
   pinMode(DOWN, INPUT_PULLUP);
   pinMode(LEFT, INPUT_PULLUP);
   pinMode(RIGHT, INPUT_PULLUP);
+  pinMode(ENTER, INPUT_PULLUP);
+  pinMode(BACK, INPUT_PULLUP);
 
   // Initialize BME680 sensor
   if (!bme.begin())
