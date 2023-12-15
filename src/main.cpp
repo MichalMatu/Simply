@@ -1,7 +1,6 @@
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
-#include <LiquidCrystal_I2C.h>
 #define UP 4
 #define DOWN 15
 #define LEFT 14
@@ -23,8 +22,7 @@ const unsigned long buttonPressDelay = 200; // 1 second delay
 // **************************************************************
 // Define BME680 sensor
 Adafruit_BME680 bme;
-// Define LCD
-LiquidCrystal_I2C lcd(0x27, 20, 4);
+
 // **************************************************************
 void buttons()
 {
@@ -50,10 +48,6 @@ void setup()
     while (1)
       ;
   }
-
-  // Initialize LCD
-  lcd.init();
-  lcd.backlight();
 }
 void sensorReadings()
 {
