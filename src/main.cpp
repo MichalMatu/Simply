@@ -8,15 +8,14 @@
 #define LCD_ROWS 4
 #define LCD_COLS 20
 
-// Configure keyboard keys (ASCII)
-#define UP 56       // NUMPAD 8
-#define DOWN 50     // NUMPAD 2
-#define LEFT 52     // NUMPAD 4
-#define RIGHT 54    // NUMPAD 6
-#define ENTER 53    // NUMPAD 5
-#define BACK 55     // NUMPAD 7
-#define BACKSPACE 8 // BACKSPACE
-#define CLEAR 46    // NUMPAD .
+#define UP 4
+#define DOWN 15
+#define LEFT 4
+#define RIGHT 5
+#define ENTER 53
+#define BACK 55
+#define BACKSPACE 8
+#define CLEAR 46
 
 extern MenuItem *settingsMenu[];
 
@@ -44,8 +43,11 @@ void setup()
   Serial.begin(115200);
   while (!Serial)
     ;
-  // set pin 39 to input mode
-  pinMode(39, INPUT);
+  // set pin modes, up, down, left, right and set to have internal pullups
+  pinMode(UP, INPUT_PULLUP);
+  pinMode(DOWN, INPUT_PULLUP);
+  pinMode(LEFT, INPUT_PULLUP);
+  pinMode(RIGHT, INPUT_PULLUP);
 
   // Initialize BME680 sensor
   if (!bme.begin())
@@ -80,20 +82,18 @@ void sensorReadings()
 
 void loop()
 {
-  if (!Serial.available())
-    return;
-  char command = Serial.read();
+  sensorReadings();
 
-  if (command == UP)
+  if (digitalRead(UP) == LOW)
     menu.up();
-  else if (command == DOWN)
+  else if (digitalRead(DOWN) == LOW)
     menu.down();
-  else if (command == LEFT)
+  else if (digitalRead(LEFT) == LOW)
     menu.left();
-  else if (command == RIGHT)
+  else if (digitalRead(RIGHT) == LOW)
     menu.right();
-  else if (command == ENTER)
+  else if (digitalRead(ENTER) == LOW)
     menu.enter();
-  else if (command == BACK)
+  else if (digitalRead(BACK) == LOW)
     menu.back();
 }
