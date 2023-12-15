@@ -76,28 +76,11 @@ void buttonsListener()
     if (digitalRead(UP) == LOW)
     {
       Serial.println("UP");
-      // check if current item is not bigger than the number of menu items
-      if (currentItem < (sizeof(menuItems) / sizeof(menuItems[0]) - 1))
-      {
-        currentItem++;
-      }
-      else
-      {
-        currentItem = 0;
-      }
       lastButtonPressTime = currentTime; // Update the last button press time
     }
     else if (digitalRead(DOWN) == LOW)
     {
       Serial.println("DOWN");
-      if (currentItem == 0)
-      {
-        currentItem = 0;
-      }
-      else
-      {
-        currentItem--;
-      }
       lastButtonPressTime = currentTime; // Update the last button press time
     }
     else if (digitalRead(LEFT) == LOW)
@@ -123,18 +106,11 @@ void buttonsListener()
   }
 }
 
-// Lista pozycji menu
-const char *menuItems[] = {
-    "Opcja 1",
-    "Opcja 2",
-    "Opcja 3",
-    "Opcja 4"};
-
 void loop()
 {
   sensorReadings();
   buttonsListener();
 
   lcd.setCursor(0, 1);
-  lcd.print(menuItems[currentItem]);
+  lcd.print(temperature);
 }
