@@ -21,6 +21,9 @@ int menuIndex = 0;
 // --------------------------------------------------------------
 unsigned long lastSensorReadingTime = 0;
 const unsigned long sensorReadingInterval = 2000; // 2 seconds
+
+unsigned long lastButtonPressTime = 0;
+const unsigned long buttonPressDelay = 200; // 1 second delay
 // **************************************************************
 
 // Define BME680 sensor
@@ -76,36 +79,48 @@ void sensorReadings()
 }
 
 // **************************************************************
-void buttonsLisener()
+void buttonsListener()
 {
-  if (digitalRead(UP) == LOW)
+  unsigned long currentTime = millis();
+
+  // Check if at least 1 second has passed since the last button press
+  if (currentTime - lastButtonPressTime >= buttonPressDelay)
   {
-    Serial.println("UP");
-  }
-  else if (digitalRead(DOWN) == LOW)
-  {
-    Serial.println("DOWN");
-  }
-  else if (digitalRead(LEFT) == LOW)
-  {
-    Serial.println("LEFT");
-  }
-  else if (digitalRead(RIGHT) == LOW)
-  {
-    Serial.println("RIGHT");
-  }
-  else if (digitalRead(ENTER) == LOW)
-  {
-    Serial.println("ENTER");
-  }
-  else if (digitalRead(BACK) == LOW)
-  {
-    Serial.println("BACK");
+    if (digitalRead(UP) == LOW)
+    {
+      Serial.println("UP");
+      lastButtonPressTime = currentTime; // Update the last button press time
+    }
+    else if (digitalRead(DOWN) == LOW)
+    {
+      Serial.println("DOWN");
+      lastButtonPressTime = currentTime; // Update the last button press time
+    }
+    else if (digitalRead(LEFT) == LOW)
+    {
+      Serial.println("LEFT");
+      lastButtonPressTime = currentTime; // Update the last button press time
+    }
+    else if (digitalRead(RIGHT) == LOW)
+    {
+      Serial.println("RIGHT");
+      lastButtonPressTime = currentTime; // Update the last button press time
+    }
+    else if (digitalRead(ENTER) == LOW)
+    {
+      Serial.println("ENTER");
+      lastButtonPressTime = currentTime; // Update the last button press time
+    }
+    else if (digitalRead(BACK) == LOW)
+    {
+      Serial.println("BACK");
+      lastButtonPressTime = currentTime; // Update the last button press time
+    }
   }
 }
 
 void loop()
 {
   sensorReadings();
-  buttonsLisener();
+  buttonsListener();
 }
