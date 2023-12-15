@@ -43,6 +43,8 @@ void buttons()
   pinMode(BACK, INPUT_PULLUP);
 }
 
+// **************************************************************
+
 void setup()
 {
   Serial.begin(115200);
