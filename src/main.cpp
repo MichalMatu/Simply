@@ -17,11 +17,17 @@
 #define BACKSPACE 8
 #define CLEAR 46
 
+float temperature = 0;
+float humidity = 0;
+float pressure = 0;
+float gasResistance = 0;
+
 extern MenuItem *settingsMenu[];
+extern MenuItem *sensorReadingsMenu[];
 
 // Define the main menu
 MAIN_MENU(
-    ITEM_BASIC("Start service"),
+    ITEM_SUBMENU("Sensor readings", sensorReadingsMenu),
     ITEM_BASIC("Connect to WiFi"),
     ITEM_SUBMENU("Settings", settingsMenu),
     ITEM_BASIC("Blink SOS"),
@@ -31,6 +37,11 @@ MAIN_MENU(
 SUB_MENU(settingsMenu, mainMenu,
          ITEM_BASIC("Backlight"),
          ITEM_BASIC("Contrast"));
+SUB_MENU(sensorReadingsMenu, mainMenu,
+         ITEM_BASIC("Temperature"),
+         ITEM_BASIC("Humidity"),
+         ITEM_BASIC("Pressure"),
+         ITEM_BASIC("Gas resistance"));
 
 LcdMenu menu(LCD_ROWS, LCD_COLS);
 
@@ -66,11 +77,6 @@ void setup()
 
   menu.setupLcdWithMenu(0x27, mainMenu);
 }
-
-float temperature = 0;
-float humidity = 0;
-float pressure = 0;
-float gasResistance = 0;
 
 void sensorReadings()
 {
