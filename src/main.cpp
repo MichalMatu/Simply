@@ -26,9 +26,8 @@ MAIN_MENU(
     ITEM_SUBMENU("Settings", settingsMenu),
     ITEM_BASIC("Blink SOS"),
     ITEM_BASIC("Blink random"));
-/**
- * Create submenu and precise its parent
- */
+
+// Create submenu and specify its parent
 SUB_MENU(settingsMenu, mainMenu,
          ITEM_BASIC("Backlight"),
          ITEM_BASIC("Contrast"));
@@ -37,6 +36,12 @@ LcdMenu menu(LCD_ROWS, LCD_COLS);
 
 // Define BME680 sensor
 Adafruit_BME680 bme;
+
+unsigned long lastSensorReadingTime = 0;
+const unsigned long sensorReadingInterval = 2000; // 2 seconds
+
+// Function declaration
+void handleButtonPress(void (LcdMenu::*action)());
 
 void setup()
 {
@@ -65,9 +70,6 @@ float humidity = 0;
 float pressure = 0;
 float gasResistance = 0;
 
-unsigned long lastSensorReadingTime = 0;
-const unsigned long sensorReadingInterval = 2000; // 2 seconds
-
 void sensorReadings()
 {
   if (millis() - lastSensorReadingTime >= sensorReadingInterval)
@@ -85,15 +87,30 @@ void loop()
   sensorReadings();
 
   if (digitalRead(UP) == LOW)
-    menu.up();
+    handleButtonPress(&LcdMenu::up);
   else if (digitalRead(DOWN) == LOW)
-    menu.down();
+    handleButtonPress(&LcdMenu::down);
   else if (digitalRead(LEFT) == LOW)
-    menu.left();
+    handleButtonPress(&LcdMenu::left);
   else if (digitalRead(RIGHT) == LOW)
-    menu.right();
+    handleButtonPress(&LcdMenu::right);
   else if (digitalRead(ENTER) == LOW)
-    menu.enter();
+    handleButtonPress(&LcdMenu::enter);
   else if (digitalRead(BACK) == LOW)
-    menu.back();
+    handleButtonPress(&LcdMenu::back);
+}
+
+void handleButtonPress(void (LcdMenu::*action)())
+{
+  static unsigned long buttonPressTime = 0; // Variable to store the time a button was pressed
+
+  // Check if the button has been pressed for at least 500 milliseconds
+  if (millis() - buttonPressTime >= 100)
+  {
+    // Call the corresponding menu action
+    (menu.*action)();
+
+    // Update the button press time
+    buttonPressTime = millis();
+  }
 }
