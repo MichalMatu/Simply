@@ -1,210 +1,123 @@
+#include "bsec.h"
 #include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include "Adafruit_BME680.h"
-#include <LiquidCrystal_I2C.h>
-#define UP 4
-#define DOWN 15
-#define LEFT 14
-#define RIGHT 5
-#define ENTER 12
-#define BACK 13
-#define BACKSPACE 8
-#define CLEAR 46
-// **************************************************************
-float temperature = 0;
-float humidity = 0;
-float pressure = 0;
-float gasResistance = 0;
-int menuY = 0;
-int menuX = 0;
-unsigned long lastSensorReadingTime = 0;
-const unsigned long sensorReadingInterval = 2000; // 2 seconds delay
-unsigned long lastButtonPressTime = 0;
-const unsigned long buttonPressDelay = 200; // 1 second delay
-// **************************************************************
-// Define BME680 sensor
-Adafruit_BME680 bme;
-// Define LCD
-LiquidCrystal_I2C lcd(0x27, 20, 4);
-// **************************************************************
-void buttons()
+
+// Helper functions declarations
+void checkIaqSensorStatus(void);
+void errLeds(void);
+
+// Create an object of the class Bsec
+Bsec iaqSensor;
+
+String output;
+
+// Entry point for the example
+void setup(void)
 {
-  pinMode(UP, INPUT_PULLUP);
-  pinMode(DOWN, INPUT_PULLUP);
-  pinMode(LEFT, INPUT_PULLUP);
-  pinMode(RIGHT, INPUT_PULLUP);
-  pinMode(ENTER, INPUT_PULLUP);
-  pinMode(BACK, INPUT_PULLUP);
-}
-void setup()
-{
+  /* Initializes the Serial communication */
   Serial.begin(115200);
-  while (!Serial)
-    ; // wait for serial port to connect. Needed for native USB port only
+  delay(1000);
+  Wire.begin();
+  pinMode(LED_BUILTIN, OUTPUT);
+  iaqSensor.begin(BME68X_I2C_ADDR_HIGH, Wire);
+  output = "\nBSEC library version " + String(iaqSensor.version.major) + "." + String(iaqSensor.version.minor) + "." + String(iaqSensor.version.major_bugfix) + "." + String(iaqSensor.version.minor_bugfix);
+  Serial.println(output);
+  checkIaqSensorStatus();
 
-  buttons();
+  bsec_virtual_sensor_t sensorList[13] = {
+      BSEC_OUTPUT_IAQ,
+      BSEC_OUTPUT_STATIC_IAQ,
+      BSEC_OUTPUT_CO2_EQUIVALENT,
+      BSEC_OUTPUT_BREATH_VOC_EQUIVALENT,
+      BSEC_OUTPUT_RAW_TEMPERATURE,
+      BSEC_OUTPUT_RAW_PRESSURE,
+      BSEC_OUTPUT_RAW_HUMIDITY,
+      BSEC_OUTPUT_RAW_GAS,
+      BSEC_OUTPUT_STABILIZATION_STATUS,
+      BSEC_OUTPUT_RUN_IN_STATUS,
+      BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE,
+      BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY,
+      BSEC_OUTPUT_GAS_PERCENTAGE};
 
-  // Initialize BME680 sensor
-  if (!bme.begin())
-  {
-    Serial.println("Could not find a valid BME680 sensor, check wiring!");
-    while (1)
-      ;
-  }
+  iaqSensor.updateSubscription(sensorList, 13, BSEC_SAMPLE_RATE_LP);
+  checkIaqSensorStatus();
 
-  // Initialize LCD
-  lcd.init();
-  lcd.backlight();
+  // Print the header
+  output = "Timestamp [ms], IAQ, IAQ accuracy, Static IAQ, CO2 equivalent, breath VOC equivalent, raw temp[°C], pressure [hPa], raw relative humidity [%], gas [Ohm], Stab Status, run in status, comp temp[°C], comp humidity [%], gas percentage";
+  Serial.println(output);
 }
-void sensorReadings()
-{
-  if (millis() - lastSensorReadingTime >= sensorReadingInterval)
-  {
-    temperature = bme.readTemperature();
-    humidity = bme.readHumidity();
-    pressure = bme.readPressure() / 100;
-    gasResistance = bme.readGas();
-    lastSensorReadingTime = millis();
-  }
-}
-void buttonsListener()
-{
-  unsigned long currentTime = millis();
 
-  // Check if at least 1 second has passed since the last button press
-  if (currentTime - lastButtonPressTime >= buttonPressDelay)
+// Function that is looped forever
+void loop(void)
+{
+  unsigned long time_trigger = millis();
+  if (iaqSensor.run())
+  { // If new data is available
+    digitalWrite(LED_BUILTIN, LOW);
+    output = String(time_trigger);
+    output += ", " + String(iaqSensor.iaq);
+    output += ", " + String(iaqSensor.iaqAccuracy);
+    output += ", " + String(iaqSensor.staticIaq);
+    output += ", " + String(iaqSensor.co2Equivalent);
+    output += ", " + String(iaqSensor.breathVocEquivalent);
+    output += ", " + String(iaqSensor.rawTemperature);
+    output += ", " + String(iaqSensor.pressure);
+    output += ", " + String(iaqSensor.rawHumidity);
+    output += ", " + String(iaqSensor.gasResistance);
+    output += ", " + String(iaqSensor.stabStatus);
+    output += ", " + String(iaqSensor.runInStatus);
+    output += ", " + String(iaqSensor.temperature);
+    output += ", " + String(iaqSensor.humidity);
+    output += ", " + String(iaqSensor.gasPercentage);
+    Serial.println(output);
+    digitalWrite(LED_BUILTIN, HIGH);
+  }
+  else
   {
-    if (digitalRead(UP) == LOW)
-    {
-      Serial.println("UP");
-      menuY++;
-      lastButtonPressTime = currentTime; // Update the last button press time
-    }
-    else if (digitalRead(DOWN) == LOW)
-    {
-      Serial.println("DOWN");
-      menuY--;
-      lastButtonPressTime = currentTime; // Update the last button press time
-    }
-    else if (digitalRead(LEFT) == LOW)
-    {
-      Serial.println("LEFT");
-      lastButtonPressTime = currentTime; // Update the last button press time
-    }
-    else if (digitalRead(RIGHT) == LOW)
-    {
-      Serial.println("RIGHT");
-      lastButtonPressTime = currentTime; // Update the last button press time
-    }
-    else if (digitalRead(ENTER) == LOW)
-    {
-      Serial.println("ENTER");
-      lastButtonPressTime = currentTime; // Update the last button press time
-    }
-    else if (digitalRead(BACK) == LOW)
-    {
-      Serial.println("BACK");
-      lastButtonPressTime = currentTime; // Update the last button press time
-    }
+    checkIaqSensorStatus();
   }
 }
 
-class Display
+// Helper function definitions
+void checkIaqSensorStatus(void)
 {
-public:
-  Display() : lastTemperature(-1), lastHumidity(-1), lastPressure(-1), lastGasResistance(-1) {}
-
-  // Update temperature line
-  void updateTemperature(int newTemperature)
+  if (iaqSensor.bsecStatus != BSEC_OK)
   {
-    if (newTemperature != lastTemperature)
+    if (iaqSensor.bsecStatus < BSEC_OK)
     {
-      lcd.setCursor(0, 0);
-      lcd.print("Temp: ");
-      lcd.print(newTemperature);
-      lcd.print(" C");
-
-      lastTemperature = newTemperature;
+      output = "BSEC error code : " + String(iaqSensor.bsecStatus);
+      Serial.println(output);
+      for (;;)
+        errLeds(); /* Halt in case of failure */
+    }
+    else
+    {
+      output = "BSEC warning code : " + String(iaqSensor.bsecStatus);
+      Serial.println(output);
     }
   }
 
-  // Update humidity line
-  void updateHumidity(int newHumidity)
+  if (iaqSensor.bme68xStatus != BME68X_OK)
   {
-    if (newHumidity != lastHumidity)
+    if (iaqSensor.bme68xStatus < BME68X_OK)
     {
-      lcd.setCursor(0, 1);
-      lcd.print("Hum: ");
-      lcd.print(newHumidity);
-      lcd.print(" %");
-
-      lastHumidity = newHumidity;
+      output = "BME68X error code : " + String(iaqSensor.bme68xStatus);
+      Serial.println(output);
+      for (;;)
+        errLeds(); /* Halt in case of failure */
+    }
+    else
+    {
+      output = "BME68X warning code : " + String(iaqSensor.bme68xStatus);
+      Serial.println(output);
     }
   }
-
-  // Update pressure line
-  void updatePressure(int newPressure)
-  {
-    if (newPressure != lastPressure)
-    {
-      lcd.setCursor(0, 2);
-      lcd.print("Pre: ");
-      lcd.print(newPressure);
-      lcd.print(" hPa");
-
-      lastPressure = newPressure;
-    }
-  }
-
-  // Update gas resistance line
-  void updateGasResistance(int newGasResistance)
-  {
-    if (newGasResistance != lastGasResistance)
-    {
-      lcd.setCursor(0, 3);
-      lcd.print("Gas: ");
-      lcd.print(newGasResistance);
-      lcd.print(" KOhms");
-
-      lastGasResistance = newGasResistance;
-    }
-  }
-
-private:
-  int lastTemperature;
-  int lastHumidity;
-  int lastPressure;
-  int lastGasResistance;
-};
-
-Display display; // Create an instance of the Display class
-
-void displaySensorReadings()
-{
-  display.updateTemperature(temperature);
-  display.updateHumidity(humidity);
-  display.updatePressure(pressure);
-  display.updateGasResistance(gasResistance);
 }
 
-void displaySettings()
+void errLeds(void)
 {
-  lcd.setCursor(0, 0);
-  lcd.print("Settings");
-}
-
-void loop()
-{
-  sensorReadings();
-  buttonsListener();
-  // if menuY change value from 0 to 1 clear screen just once after change
-
-  if (menuY == 0)
-  {
-    displaySensorReadings();
-  }
-  else if (menuY == 1)
-  {
-    displaySettings();
-  }
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(100);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(100);
 }
