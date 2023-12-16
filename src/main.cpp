@@ -15,7 +15,8 @@ float temperature = 0;
 float humidity = 0;
 float pressure = 0;
 float gasResistance = 0;
-int currentItem = 0;
+int menuY = 0;
+int menuX = 0;
 unsigned long lastSensorReadingTime = 0;
 const unsigned long sensorReadingInterval = 2000; // 2 seconds delay
 unsigned long lastButtonPressTime = 0;
@@ -76,13 +77,13 @@ void buttonsListener()
     if (digitalRead(UP) == LOW)
     {
       Serial.println("UP");
-      currentItem++;
+      menuY++;
       lastButtonPressTime = currentTime; // Update the last button press time
     }
     else if (digitalRead(DOWN) == LOW)
     {
       Serial.println("DOWN");
-      currentItem--;
+      menuY--;
       lastButtonPressTime = currentTime; // Update the last button press time
     }
     else if (digitalRead(LEFT) == LOW)
@@ -178,7 +179,7 @@ private:
 
 Display display; // Create an instance of the Display class
 
-void displayMenu()
+void displaySensorReadings()
 {
   display.updateTemperature(temperature);
   display.updateHumidity(humidity);
@@ -196,13 +197,13 @@ void loop()
 {
   sensorReadings();
   buttonsListener();
-  // if currentItem change value from 0 to 1 clear screen just once after change
+  // if menuY change value from 0 to 1 clear screen just once after change
 
-  if (currentItem == 0)
+  if (menuY == 0)
   {
-    displayMenu();
+    displaySensorReadings();
   }
-  else if (currentItem == 1)
+  else if (menuY == 1)
   {
     displaySettings();
   }
